@@ -71,12 +71,12 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Feature | Reason |
 |---------|--------|
-| Chat integration | Massive scope — each platform has different chat APIs, auth, rate limits |
-| Stream recording/DVR | Different product domain — use OBS/yt-dlp alongside Streamwall |
-| AI-powered recommendations | Over-engineered for operator tool — keyword filtering covers 90% |
-| Real-time viewer analytics/charts | Analytics is a separate product — show current count only |
+| Chat integration | Massive scope -- each platform has different chat APIs, auth, rate limits |
+| Stream recording/DVR | Different product domain -- use OBS/yt-dlp alongside Streamwall |
+| AI-powered recommendations | Over-engineered for operator tool -- keyword filtering covers 90% |
+| Real-time viewer analytics/charts | Analytics is a separate product -- show current count only |
 | Automatic stream quality selection | Platforms auto-select; HLS uses hls.js adaptive bitrate |
-| Desktop notifications for new streams | Noisy for always-on monitoring — new streams appear in list |
+| Desktop notifications for new streams | Noisy for always-on monitoring -- new streams appear in list |
 | Follow/favorite channels | Use existing TOML/JSON sources for known channels |
 | Bundled API keys | Users provide their own credentials for Twitch/Kick |
 
@@ -86,37 +86,37 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DISC-01 | TBD | Pending |
-| DISC-02 | TBD | Pending |
-| DISC-03 | TBD | Pending |
-| DISC-04 | TBD | Pending |
-| DISC-05 | TBD | Pending |
-| DISC-06 | TBD | Pending |
-| DISC-07 | TBD | Pending |
-| DISC-08 | TBD | Pending |
-| DISC-09 | TBD | Pending |
-| FILT-01 | TBD | Pending |
-| FILT-02 | TBD | Pending |
-| FILT-03 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
-| UI-03 | TBD | Pending |
-| UI-04 | TBD | Pending |
-| UI-05 | TBD | Pending |
-| UI-06 | TBD | Pending |
-| POLL-01 | TBD | Pending |
-| POLL-02 | TBD | Pending |
-| POLL-03 | TBD | Pending |
-| INFR-01 | TBD | Pending |
-| INFR-02 | TBD | Pending |
-| INFR-03 | TBD | Pending |
-| INFR-04 | TBD | Pending |
+| DISC-01 | Phase 2 | Pending |
+| DISC-02 | Phase 2 | Pending |
+| DISC-03 | Phase 2 | Pending |
+| DISC-04 | Phase 2 | Pending |
+| DISC-05 | Phase 6 | Pending |
+| DISC-06 | Phase 6 | Pending |
+| DISC-07 | Phase 6 | Pending |
+| DISC-08 | Phase 1 | Pending |
+| DISC-09 | Phase 1 | Pending |
+| FILT-01 | Phase 4 | Pending |
+| FILT-02 | Phase 4 | Pending |
+| FILT-03 | Phase 4 | Pending |
+| UI-01 | Phase 3 | Pending |
+| UI-02 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Pending |
+| UI-04 | Phase 3 | Pending |
+| UI-05 | Phase 3 | Pending |
+| UI-06 | Phase 5 | Pending |
+| POLL-01 | Phase 4 | Pending |
+| POLL-02 | Phase 4 | Pending |
+| POLL-03 | Phase 4 | Pending |
+| INFR-01 | Phase 1 | Pending |
+| INFR-02 | Phase 1 | Pending |
+| INFR-03 | Phase 1 | Pending |
+| INFR-04 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 0
-- Unmapped: 25
+- Mapped to phases: 25
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-05*
-*Last updated: 2026-03-05 after initial definition*
+*Last updated: 2026-03-05 after roadmap creation*
