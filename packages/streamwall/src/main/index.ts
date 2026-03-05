@@ -1,7 +1,14 @@
 import TOML from '@iarna/toml'
-import { BrowserWindow, app, session } from 'electron'
+import {
+  BrowserWindow,
+  MessageChannelMain,
+  app,
+  session,
+  utilityProcess,
+} from 'electron'
 import started from 'electron-squirrel-startup'
 import fs from 'fs'
+import path from 'path'
 import 'source-map-support/register'
 import { ControlCommand, StreamwallState } from 'streamwall-shared'
 import { updateElectronApp } from 'update-electron-app'
@@ -17,6 +24,11 @@ import {
   pollDataURL,
   watchDataFile,
 } from './data'
+import { createDiscoveryBridge } from './discovery/bridge'
+import {
+  discoveryStore,
+  getDiscoverySettings,
+} from './discovery/settings'
 import StreamdelayClient from './StreamdelayClient'
 import StreamWindow from './StreamWindow'
 
@@ -182,7 +194,9 @@ function parseArgs(): StreamwallConfig {
 }
 
 async function main(argv: ReturnType<typeof parseArgs>) {
-  updateElectronApp()
+  if (app.isPackaged) {
+    updateElectronApp()
+  }
 
   // Reject all permission requests from web content.
   session
@@ -407,6 +421,55 @@ async function main(argv: ReturnType<typeof parseArgs>) {
   }
     */
 
+  // --- Discovery utility process ---
+  const { port1, port2 } = new MessageChannelMain()
+
+  function forkDiscoveryProcess() {
+    const child = utilityProcess.fork(
+      path.join(__dirname, 'discovery-worker.js'),
+    )
+    child.postMessage({ type: 'init' }, [port1])
+    return child
+  }
+
+  let discoveryProcess = forkDiscoveryProcess()
+  port2.start()
+  port2.postMessage({
+    type: 'configure',
+    settings: getDiscoverySettings(),
+  })
+
+  // Propagate settings changes to utility process in real time
+  discoveryStore.onDidAnyChange(() => {
+    port2.postMessage({
+      type: 'configure',
+      settings: getDiscoverySettings(),
+    })
+  })
+
+  // Auto-restart with exponential backoff on crash (1s, 2s, 4s, cap 5 retries)
+  let restartCount = 0
+  const onDiscoveryExit = (code: number) => {
+    if (code !== 0 && restartCount < 5) {
+      const delay = Math.min(1000 * Math.pow(2, restartCount), 4000)
+      restartCount++
+      console.warn(
+        `Discovery process exited with code ${code}, restarting in ${delay}ms (attempt ${restartCount}/5)`,
+      )
+      setTimeout(() => {
+        discoveryProcess = forkDiscoveryProcess()
+        discoveryProcess.on('exit', onDiscoveryExit)
+      }, delay)
+    } else if (code !== 0) {
+      console.error(
+        'Discovery process crashed too many times, giving up',
+      )
+    }
+  }
+  discoveryProcess.on('exit', onDiscoveryExit)
+
+  const discoveryBridge = createDiscoveryBridge(port2)
+
   const dataSources = [
     ...argv.data['json-url'].map((url) => {
       console.debug('Setting data source from json-url:', url)
@@ -418,6 +481,7 @@ async function main(argv: ReturnType<typeof parseArgs>) {
     }),
     markDataSource(localStreamData.gen(), 'custom'),
     overlayStreamData.gen(),
+    markDataSource(discoveryBridge, 'discovery'),
   ]
 
   for await (const rawStreams of combineDataSources(dataSources)) {

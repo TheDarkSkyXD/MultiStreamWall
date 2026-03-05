@@ -40,6 +40,11 @@ const config: ForgeConfig = {
           target: 'main',
         },
         {
+          entry: 'src/main/discovery-worker.ts',
+          config: 'vite.main.config.ts',
+          target: 'main',
+        },
+        {
           entry: 'src/preload/layerPreload.ts',
           config: 'vite.preload.config.ts',
           target: 'preload',
