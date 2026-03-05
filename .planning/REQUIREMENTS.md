@@ -11,8 +11,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **DISC-01**: User can search YouTube live streams by keyword via youtubei.js (no API key required)
 - [x] **DISC-02**: User can optionally provide YouTube Data API v3 key for higher rate limits
-- [ ] **DISC-03**: User can search Twitch live streams via @twurple/api (app credentials in settings)
-- [ ] **DISC-04**: User can search Kick live streams via direct API fetch (app credentials in settings)
+- [x] **DISC-03**: User can search Twitch live streams via @twurple/api (app credentials in settings)
+- [x] **DISC-04**: User can search Kick live streams via direct API fetch (app credentials in settings)
 - [ ] **DISC-05**: User can discover TikTok live streams via scraping/unofficial approach
 - [ ] **DISC-06**: User can discover Instagram live streams via scraping/unofficial approach
 - [ ] **DISC-07**: User can discover Facebook live streams via scraping/unofficial approach
@@ -88,8 +88,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | DISC-01 | Phase 2 | Complete |
 | DISC-02 | Phase 2 | Complete |
-| DISC-03 | Phase 2 | Pending |
-| DISC-04 | Phase 2 | Pending |
+| DISC-03 | Phase 2 | Complete |
+| DISC-04 | Phase 2 | Complete |
 | DISC-05 | Phase 6 | Pending |
 | DISC-06 | Phase 6 | Pending |
 | DISC-07 | Phase 6 | Pending |
