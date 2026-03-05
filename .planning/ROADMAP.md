@@ -46,11 +46,11 @@ Plans:
   2. User can optionally enter a YouTube Data API v3 key for higher rate limits, and the provider switches to use it
   3. User can search Twitch live streams after entering app credentials in settings
   4. User can search Kick live streams by keyword with no credentials required
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- YouTube dual-mode provider (Innertube + Data API v3), CLI flags, search query persistence
+- [ ] 02-02-PLAN.md -- Twitch GQL provider, Kick dual-approach provider, complete provider registration
 
 ### Phase 3: Discovery UI
 **Goal**: Operators can browse discovered streams in the control panel and add them to the grid with one click
