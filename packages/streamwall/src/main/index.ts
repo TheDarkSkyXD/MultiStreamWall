@@ -28,6 +28,9 @@ import { createDiscoveryBridge } from './discovery/bridge'
 import {
   discoveryStore,
   getDiscoverySettings,
+  getSearchQuery,
+  setApiKey,
+  setSearchQuery,
 } from './discovery/settings'
 import StreamdelayClient from './StreamdelayClient'
 import StreamWindow from './StreamWindow'
@@ -55,6 +58,8 @@ export interface StreamwallConfig {
     endpoint: string
     key: string | null
   }
+  'discovery-query': string
+  'youtube-api-key': string
 }
 
 function parseArgs(): StreamwallConfig {
@@ -178,6 +183,20 @@ function parseArgs(): StreamwallConfig {
       describe: 'Email for owner of SSL certificate',
     })
     */
+      .group(
+        ['discovery-query', 'youtube-api-key'],
+        'Discovery',
+      )
+      .option('discovery-query', {
+        describe: 'Comma-separated keywords for stream discovery',
+        string: true,
+        default: '',
+      })
+      .option('youtube-api-key', {
+        describe: 'YouTube Data API v3 key (enables higher rate limits)',
+        string: true,
+        default: '',
+      })
       .group(['streamdelay.endpoint', 'streamdelay.key'], 'Streamdelay')
       .option('streamdelay.endpoint', {
         describe: 'URL of Streamdelay endpoint',
@@ -421,6 +440,14 @@ async function main(argv: ReturnType<typeof parseArgs>) {
   }
     */
 
+  // --- Discovery settings from CLI ---
+  if (argv['discovery-query']) {
+    setSearchQuery(argv['discovery-query'])
+  }
+  if (argv['youtube-api-key']) {
+    setApiKey('youtube', argv['youtube-api-key'])
+  }
+
   // --- Discovery utility process ---
   const { port1, port2 } = new MessageChannelMain()
 
@@ -467,6 +494,12 @@ async function main(argv: ReturnType<typeof parseArgs>) {
     }
   }
   discoveryProcess.on('exit', onDiscoveryExit)
+
+  // If there's a persisted search query, trigger discovery
+  const searchQuery = getSearchQuery()
+  if (searchQuery) {
+    port2.postMessage({ type: 'search', query: searchQuery })
+  }
 
   const discoveryBridge = createDiscoveryBridge(port2)
 

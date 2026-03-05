@@ -1,10 +1,10 @@
 /**
  * Static provider registry.
  *
- * Phase 1: empty array -- no platform providers yet.
- * Phase 2 will add platform providers here by importing
- * their classes and instantiating them.
+ * Platform providers are instantiated here and exported as
+ * an array for the DiscoveryManager to consume.
  */
 import type { BaseProvider } from '../base'
+import { YouTubeProvider } from './youtube'
 
-export const providers: BaseProvider[] = []
+export const providers: BaseProvider[] = [new YouTubeProvider()]

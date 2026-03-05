@@ -11,6 +11,7 @@ import type { DiscoveryWorkerSettings } from './types'
 interface DiscoveryStoreSchema {
   discoveryIntervalMs: number
   livenessIntervalMs: number
+  searchQuery: string
   providers: Record<
     string,
     {
@@ -25,6 +26,7 @@ interface DiscoveryStoreSchema {
 const defaults: DiscoveryStoreSchema = {
   discoveryIntervalMs: 60000,
   livenessIntervalMs: 30000,
+  searchQuery: '',
   providers: {},
 }
 
@@ -82,6 +84,14 @@ export function getDiscoverySettings(): DiscoveryWorkerSettings {
       ]),
     ),
   }
+}
+
+export function getSearchQuery(): string {
+  return discoveryStore.get('searchQuery')
+}
+
+export function setSearchQuery(query: string): void {
+  discoveryStore.set('searchQuery', query)
 }
 
 export function resetDefaults(): void {
