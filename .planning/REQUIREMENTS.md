@@ -16,7 +16,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DISC-05**: User can discover TikTok live streams via scraping/unofficial approach
 - [ ] **DISC-06**: User can discover Instagram live streams via scraping/unofficial approach
 - [ ] **DISC-07**: User can discover Facebook live streams via scraping/unofficial approach
-- [ ] **DISC-08**: All platform providers implement a consistent adapter interface
+- [x] **DISC-08**: All platform providers implement a consistent adapter interface
 - [ ] **DISC-09**: A broken/unavailable platform degrades gracefully without affecting other platforms
 
 ### Filtering
@@ -44,8 +44,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **INFR-01**: Discovery manager orchestrates all platform providers and merges results
 - [ ] **INFR-02**: API polling runs in a worker thread or utility process to avoid blocking main process
-- [ ] **INFR-03**: Per-platform rate limiting prevents API throttling/bans
-- [ ] **INFR-04**: Thumbnail caching with LRU eviction prevents memory leaks in long sessions
+- [x] **INFR-03**: Per-platform rate limiting prevents API throttling/bans
+- [x] **INFR-04**: Thumbnail caching with LRU eviction prevents memory leaks in long sessions
 
 ## v2 Requirements
 
@@ -93,7 +93,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DISC-05 | Phase 6 | Pending |
 | DISC-06 | Phase 6 | Pending |
 | DISC-07 | Phase 6 | Pending |
-| DISC-08 | Phase 1 | Pending |
+| DISC-08 | Phase 1 | Complete |
 | DISC-09 | Phase 1 | Pending |
 | FILT-01 | Phase 4 | Pending |
 | FILT-02 | Phase 4 | Pending |
@@ -109,8 +109,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | POLL-03 | Phase 4 | Pending |
 | INFR-01 | Phase 1 | Pending |
 | INFR-02 | Phase 1 | Pending |
-| INFR-03 | Phase 1 | Pending |
-| INFR-04 | Phase 1 | Pending |
+| INFR-03 | Phase 1 | Complete |
+| INFR-04 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 25 total
