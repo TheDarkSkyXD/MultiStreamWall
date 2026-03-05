@@ -1,5 +1,4 @@
 import TOML from '@iarna/toml'
-import * as Sentry from '@sentry/electron/main'
 import { BrowserWindow, app, session } from 'electron'
 import started from 'electron-squirrel-startup'
 import fs from 'fs'
@@ -20,9 +19,6 @@ import {
 } from './data'
 import StreamdelayClient from './StreamdelayClient'
 import StreamWindow from './StreamWindow'
-
-const SENTRY_DSN =
-  'https://e630a21dcf854d1a9eb2a7a8584cbd0b@o459879.ingest.sentry.io/5459505'
 
 export interface StreamwallConfig {
   help: boolean
@@ -46,9 +42,6 @@ export interface StreamwallConfig {
   streamdelay: {
     endpoint: string
     key: string | null
-  }
-  telemetry: {
-    sentry: boolean
   }
 }
 
@@ -182,12 +175,6 @@ function parseArgs(): StreamwallConfig {
         describe: 'Streamdelay API key',
         default: null,
       })
-      .group(['telemetry.sentry'], 'Telemetry')
-      .option('telemetry.sentry', {
-        describe: 'Enable error reporting to Sentry',
-        boolean: true,
-        default: true,
-      })
       .help()
       // https://github.com/yargs/yargs/issues/2137
       .parseSync() as unknown as StreamwallConfig
@@ -195,6 +182,8 @@ function parseArgs(): StreamwallConfig {
 }
 
 async function main(argv: ReturnType<typeof parseArgs>) {
+  updateElectronApp()
+
   // Reject all permission requests from web content.
   session
     .fromPartition('persist:session')
@@ -444,13 +433,6 @@ function init() {
   if (argv.help) {
     return
   }
-
-  console.debug('Initializing Sentry...')
-  if (argv.telemetry.sentry) {
-    Sentry.init({ dsn: SENTRY_DSN })
-  }
-
-  updateElectronApp()
 
   console.debug('Setting up Electron...')
   app.commandLine.appendSwitch('high-dpi-support', '1')

@@ -5,6 +5,9 @@
     "packages/streamwall-shared",
     "packages/streamwall-control-ui"
   ],
+  "scripts": {
+    "start": "npm start --workspace=packages/streamwall"
+  },
   "devDependencies": {
     "prettier": "^3.4.2",
     "prettier-plugin-organize-imports": "^4.1.0"
