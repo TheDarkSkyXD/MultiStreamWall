@@ -32,6 +32,23 @@ export interface StreamData extends ContentDisplayOptions {
   status?: string
   _id: string
   _dataSource: string
+  // Discovery extensions (optional)
+  thumbnailUrl?: string
+  viewerCount?: number
+  platform?: string
+  channelName?: string
+}
+
+export interface ProviderSettings {
+  enabled: boolean
+  apiKey?: string
+  [key: string]: unknown
+}
+
+export interface DiscoverySettings {
+  discoveryIntervalMs: number
+  livenessIntervalMs: number
+  providers: Record<string, ProviderSettings>
 }
 
 export type LocalStreamData = Omit<StreamData, '_id' | '_dataSource'>
