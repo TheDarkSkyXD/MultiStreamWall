@@ -10,7 +10,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.6.0",
@@ -36,7 +37,8 @@
     "eslint-plugin-import": "^2.31.0",
     "ts-node": "^10.9.2",
     "typescript": "~4.5.4",
-    "vite": "^5.4.14"
+    "vite": "^5.4.14",
+    "vitest": "^4.0.18"
   },
   "keywords": [],
   "author": "Max Goodhart <c@chromakode.com>",
@@ -45,6 +47,8 @@
     "@fontsource/noto-sans": "^5.1.1",
     "@iarna/toml": "^2.2.5",
     "@repeaterjs/repeater": "^3.0.6",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@tailwindcss/vite": "^4.2.1",
     "bufferutil": "^4.0.9",
     "chokidar": "^4.0.3",
     "color": "^5.0.0",
@@ -57,8 +61,11 @@
     "react-icons": "^5.4.0",
     "reconnecting-websocket": "^4.4.0",
     "source-map-support": "^0.5.21",
+    "streamwall-control-ui": "*",
+    "streamwall-shared": "*",
     "styled-components": "^6.1.13",
     "svg-loaders-react": "^3.1.1",
+    "tailwindcss": "^4.2.1",
     "update-electron-app": "^3.1.1",
     "utf-8-validate": "^5.0.10",
     "ws": "^7.5.10",
