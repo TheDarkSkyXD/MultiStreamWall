@@ -31,11 +31,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. API polling runs in a worker thread or utility process, not blocking the main Electron process
   4. Per-platform rate limiting is enforced by the infrastructure (not left to individual providers)
   5. Settings (API keys, intervals) persist to disk across app restarts, with credentials encrypted via safeStorage
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- Types, utilities (rate limiter, LRU cache, mapper), vitest setup, and tests
+- [ ] 01-02-PLAN.md -- BaseProvider, DiscoveryManager, settings store, utility process worker, bridge, and pipeline integration
 
 ### Phase 2: Stable Platform Providers
 **Goal**: Operators can discover live streams from YouTube, Twitch, and Kick -- the three platforms with stable APIs
