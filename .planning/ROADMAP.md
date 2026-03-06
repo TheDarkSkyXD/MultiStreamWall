@@ -46,11 +46,12 @@ Plans:
   2. User can optionally enter a YouTube Data API v3 key for higher rate limits, and the provider switches to use it
   3. User can search Twitch live streams after entering app credentials in settings
   4. User can search Kick live streams by keyword with no credentials required
-**Plans:** 1/2 plans executed
+**Plans:** 3 plans (2 executed + 1 gap closure)
 
 Plans:
 - [ ] 02-01-PLAN.md -- YouTube dual-mode provider (Innertube + Data API v3), CLI flags, search query persistence
 - [ ] 02-02-PLAN.md -- Twitch GQL provider, Kick dual-approach provider, complete provider registration
+- [ ] 02-03-PLAN.md -- Fix YouTube Data API to Innertube fallback on non-quota errors (gap closure)
 
 ### Phase 3: Discovery UI
 **Goal**: Operators can browse discovered streams in the control panel and add them to the grid with one click
@@ -121,7 +122,7 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5 > 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Discovery Infrastructure | 0/2 | Not started | - |
-| 2. Stable Platform Providers | 1/2 | In Progress|  |
+| 2. Stable Platform Providers | 2/3 | In Progress|  |
 | 3. Discovery UI | 0/2 | Not started | - |
 | 4. Filtering and Polling | 0/2 | Not started | - |
 | 5. Settings UI | 0/1 | Not started | - |
