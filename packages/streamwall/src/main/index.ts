@@ -63,8 +63,10 @@ export interface StreamwallConfig {
 }
 
 function parseArgs(): StreamwallConfig {
+  // Explicitly pass argv to yargs — Electron/Chromium may mutate process.argv
+  const args = process.argv.slice(2)
   return (
-    yargs()
+    yargs(args)
       .config('config', (configPath) => {
         return TOML.parse(fs.readFileSync(configPath, 'utf-8'))
       })
@@ -213,6 +215,7 @@ function parseArgs(): StreamwallConfig {
 }
 
 async function main(argv: ReturnType<typeof parseArgs>) {
+  console.debug('[main] process.argv:', JSON.stringify(process.argv))
   if (app.isPackaged) {
     updateElectronApp()
   }
@@ -441,34 +444,73 @@ async function main(argv: ReturnType<typeof parseArgs>) {
     */
 
   // --- Discovery settings from CLI ---
+  console.debug('[Discovery] CLI discovery-query:', JSON.stringify(argv['discovery-query']))
   if (argv['discovery-query']) {
     setSearchQuery(argv['discovery-query'])
+    console.debug('[Discovery] Persisted search query:', getSearchQuery())
   }
   if (argv['youtube-api-key']) {
     setApiKey('youtube', argv['youtube-api-key'])
   }
 
   // --- Discovery utility process ---
-  const { port1, port2 } = new MessageChannelMain()
+  let mainPort: Electron.MessagePortMain | null = null
 
   function forkDiscoveryProcess() {
-    const child = utilityProcess.fork(
-      path.join(__dirname, 'discovery-worker.js'),
+    const { port1, port2 } = new MessageChannelMain()
+    const workerPath = path.join(__dirname, 'discovery-worker.js')
+    console.debug('[Discovery] Forking worker at:', workerPath)
+    const child = utilityProcess.fork(workerPath, {
+      stdio: 'pipe',
+    })
+    child.stdout?.on('data', (data: Buffer) =>
+      console.debug(`[Discovery worker] ${data.toString().trimEnd()}`),
+    )
+    child.stderr?.on('data', (data: Buffer) =>
+      console.error(`[Discovery worker] ${data.toString().trimEnd()}`),
+    )
+    child.on('spawn', () => console.debug('[Discovery] Worker process spawned'))
+    child.on('exit', (code) =>
+      console.debug(`[Discovery] Worker process exited with code ${code}`),
     )
     child.postMessage({ type: 'init' }, [port1])
+
+    // Set up the main-side port
+    if (mainPort) {
+      mainPort.close()
+    }
+    mainPort = port2
+    mainPort.start()
+
+    // Wait for worker 'ready' signal before sending configure + search
+    mainPort.on('message', function onReady(event: Electron.MessageEvent) {
+      const msg = event.data as { type: string }
+      if (msg.type === 'ready') {
+        mainPort!.off('message', onReady)
+        console.debug('[Discovery] Worker ready, sending configure...')
+        mainPort!.postMessage({
+          type: 'configure',
+          settings: getDiscoverySettings(),
+        })
+        // If there's a persisted search query, trigger discovery
+        const searchQuery = getSearchQuery()
+        if (searchQuery) {
+          console.debug(
+            `[Discovery] Sending search query: "${searchQuery}"`,
+          )
+          mainPort!.postMessage({ type: 'search', query: searchQuery })
+        }
+      }
+    })
+
     return child
   }
 
   let discoveryProcess = forkDiscoveryProcess()
-  port2.start()
-  port2.postMessage({
-    type: 'configure',
-    settings: getDiscoverySettings(),
-  })
 
   // Propagate settings changes to utility process in real time
   discoveryStore.onDidAnyChange(() => {
-    port2.postMessage({
+    mainPort?.postMessage({
       type: 'configure',
       settings: getDiscoverySettings(),
     })
@@ -495,13 +537,7 @@ async function main(argv: ReturnType<typeof parseArgs>) {
   }
   discoveryProcess.on('exit', onDiscoveryExit)
 
-  // If there's a persisted search query, trigger discovery
-  const searchQuery = getSearchQuery()
-  if (searchQuery) {
-    port2.postMessage({ type: 'search', query: searchQuery })
-  }
-
-  const discoveryBridge = createDiscoveryBridge(port2)
+  const discoveryBridge = createDiscoveryBridge(mainPort!)
 
   const dataSources = [
     ...argv.data['json-url'].map((url) => {
@@ -525,8 +561,13 @@ async function main(argv: ReturnType<typeof parseArgs>) {
 }
 
 function init() {
+  console.log('[init] process.argv:', process.argv)
   console.debug('Parsing command line arguments...')
+  console.log('[init] yargs input:', process.argv.slice(2))
   const argv = parseArgs()
+  console.log('[init] parsed argv keys:', Object.keys(argv).filter(k => k.includes('discovery') || k.includes('youtube')))
+  console.log('[init] parsed discovery-query:', JSON.stringify(argv['discovery-query']))
+  console.log('[init] parsed discoveryQuery:', JSON.stringify((argv as any).discoveryQuery))
   if (argv.help) {
     return
   }
@@ -552,5 +593,20 @@ if (started) {
   app.quit()
 }
 
-console.debug('Starting Streamwall...')
-init()
+// Prevent multiple instances — focus existing window when re-launched
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    // When a second instance is launched, focus the existing windows
+    const windows = BrowserWindow.getAllWindows()
+    for (const win of windows) {
+      if (win.isMinimized()) win.restore()
+      win.focus()
+    }
+  })
+
+  console.debug('Starting Streamwall...')
+  init()
+}

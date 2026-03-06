@@ -19,7 +19,14 @@ export function createDiscoveryBridge(
       const message = event.data as WorkerOutMessage
       if (message.type === 'streams') {
         const streams = message.payload.map(toStreamData)
+        console.debug(
+          `[Discovery] ${message.platform}: ${streams.length} streams`,
+        )
         push(streams)
+      } else if (message.type === 'error') {
+        console.warn(
+          `[Discovery] ${message.platform} error: ${message.error.message}`,
+        )
       }
     }
 

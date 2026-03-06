@@ -9,7 +9,6 @@ import fetch from 'node-fetch'
 import { Innertube } from 'youtubei.js'
 
 import { BaseProvider } from '../base'
-import { getApiKey } from '../settings'
 import type {
   DiscoveredStream,
   ProviderCapabilities,
@@ -32,8 +31,10 @@ export class YouTubeProvider extends BaseProvider {
   }
 
   private innertube: Innertube | null = null
+  private apiKey: string | undefined
 
-  async onInit(_config: Record<string, unknown>): Promise<void> {
+  async onInit(config: Record<string, unknown>): Promise<void> {
+    this.apiKey = config.apiKey as string | undefined
     try {
       this.innertube = await Innertube.create()
       console.log('[YouTube] Innertube client initialized')
@@ -44,7 +45,7 @@ export class YouTubeProvider extends BaseProvider {
   }
 
   async onSearch(query: string): Promise<ProviderResult> {
-    const apiKey = getApiKey('youtube')
+    const apiKey = this.apiKey
     const keywords = query
       .split(',')
       .map((k) => k.trim())

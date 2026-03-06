@@ -7,7 +7,6 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import {
   CollabData,
   ControlUI,
-  GlobalStyle,
   StreamwallConnection,
   useStreamwallState,
   useYDoc,
@@ -87,12 +86,7 @@ function App() {
     window.streamwallControl.openDevTools()
   })
 
-  return (
-    <>
-      <GlobalStyle />
-      <ControlUI connection={connection} />
-    </>
-  )
+  return <ControlUI connection={connection} />
 }
 
 render(<App />, document.body)

@@ -17,6 +17,8 @@ let settings: DiscoveryWorkerSettings | null = null
 let pollingTimer: ReturnType<typeof setTimeout> | null = null
 let paused = false
 let currentQuery = ''
+let initializing = false
+let pendingSearch: string | null = null
 
 function sendMessage(msg: WorkerOutMessage) {
   if (workerPort) {
@@ -75,6 +77,7 @@ async function handleMessage(msg: WorkerInMessage) {
     case 'configure': {
       settings = msg.settings
       if (!manager) {
+        initializing = true
         manager = new DiscoveryManager(providers)
         // Build config map from settings providers
         const configs: Record<string, Record<string, unknown>> = {}
@@ -84,17 +87,30 @@ async function handleMessage(msg: WorkerInMessage) {
           configs[platform] = { ...providerSettings }
         }
         await manager.initAll(configs)
+        initializing = false
+        // Run any search that arrived during initialization
+        if (pendingSearch !== null) {
+          currentQuery = pendingSearch
+          pendingSearch = null
+          stopPolling()
+          await runSearch()
+        }
       }
       // If already running, settings update is picked up on next poll
-      if (!paused && !pollingTimer) {
+      if (!paused && !pollingTimer && !initializing) {
         scheduleNextPoll()
       }
       break
     }
     case 'search': {
-      currentQuery = msg.query
-      stopPolling()
-      await runSearch()
+      if (initializing) {
+        // Queue search until initialization completes
+        pendingSearch = msg.query
+      } else {
+        currentQuery = msg.query
+        stopPolling()
+        await runSearch()
+      }
       break
     }
     case 'pause': {

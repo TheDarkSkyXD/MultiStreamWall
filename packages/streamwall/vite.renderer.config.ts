@@ -16,6 +16,12 @@ export default defineConfig({
     },
   },
 
+  css: {
+    postcss: {
+      plugins: [require('@tailwindcss/postcss')],
+    },
+  },
+
   resolve: {
     alias: {
       // Necessary for vite to watch the package dir

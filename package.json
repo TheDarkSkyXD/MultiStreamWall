@@ -6,7 +6,7 @@
     "packages/streamwall-control-ui"
   ],
   "scripts": {
-    "start": "npm start --workspace=packages/streamwall"
+    "start": "node packages/streamwall/scripts/start.js"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

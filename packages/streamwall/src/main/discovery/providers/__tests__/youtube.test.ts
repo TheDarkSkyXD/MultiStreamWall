@@ -3,31 +3,9 @@
  *
  * Unit tests run always. Integration tests hit real YouTube APIs
  * and may be flaky due to rate limiting -- that's expected.
- *
- * Settings module is mocked to avoid electron-store requiring
- * Electron's app context in test environment.
  */
-import { describe, expect, it, beforeAll, afterAll, vi } from 'vitest'
+import { describe, expect, it, beforeAll, afterAll } from 'vitest'
 import type { DiscoveredStream } from '../../types'
-
-// Mock settings module before importing YouTubeProvider
-vi.mock('../../settings', () => ({
-  getApiKey: vi.fn(() => undefined),
-  setApiKey: vi.fn(),
-  getSearchQuery: vi.fn(() => ''),
-  setSearchQuery: vi.fn(),
-  getDiscoverySettings: vi.fn(() => ({
-    discoveryIntervalMs: 60000,
-    livenessIntervalMs: 30000,
-    providers: {},
-  })),
-  discoveryStore: {
-    get: vi.fn(),
-    set: vi.fn(),
-    onDidAnyChange: vi.fn(),
-  },
-}))
-
 import { YouTubeProvider } from '../youtube'
 
 describe('YouTubeProvider', () => {

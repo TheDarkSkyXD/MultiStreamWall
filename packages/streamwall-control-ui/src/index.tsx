@@ -35,7 +35,6 @@ import {
   StreamWindowConfig,
   ViewState,
 } from 'streamwall-shared'
-import { createGlobalStyle, styled } from 'styled-components'
 import { matchesState } from 'xstate'
 import * as Y from 'yjs'
 
@@ -75,16 +74,9 @@ const hotkeyTriggers = [
   'p',
 ]
 
-export const GlobalStyle = createGlobalStyle`
-  html {
-    height: 100%;
-  }
-
-  html, body {
-    display: flex;
-    flex: 1;
-  }
-`
+export function GlobalStyle() {
+  return null
+}
 
 const normalStreamKinds = new Set(['video', 'audio', 'web'])
 function filterStreams(streams: StreamData[]) {
@@ -623,37 +615,6 @@ export function ControlUI({
     [send],
   )
 
-  /*
-  const [newInvite, setNewInvite] = useState<Invite>()
-
-  const handleCreateInvite = useCallback(
-    ({ name, role }: { name: string; role: StreamwallRole }) => {
-      send(
-        {
-          type: 'create-invite',
-          name,
-          role,
-        },
-        (msg) => {
-          setNewInvite(msg as Invite) // TODO: validate w/ Zod
-        },
-      )
-    },
-    [],
-  )
-
-  const handleDeleteToken = useCallback((tokenId: string) => {
-    send({
-      type: 'delete-token',
-      tokenId,
-    })
-  }, [])
-
-  const preventLinkClick = useCallback((ev: Event) => {
-    ev.preventDefault()
-  }, [])
-  */
-
   // Set up keyboard shortcuts.
   useHotkeys(
     hotkeyTriggers.map((k) => `alt+${k}`).join(','),
@@ -714,19 +675,20 @@ export function ControlUI({
   }
 
   return (
-    <Stack flex="1">
-      <Stack>
-        <StyledHeader>
-          {role !== 'local' && (
-            <>
-              <h1>Streamwall ({location.host})</h1>
-              <div>
-                connection status: {isConnected ? 'connected' : 'connecting...'}
-              </div>
-              <div>role: {role}</div>
-            </>
-          )}
-        </StyledHeader>
+    <div className="flex flex-col flex-1 h-full min-h-0">
+      <div className="flex flex-col shrink min-h-0 overflow-auto">
+        {role !== 'local' && (
+          <header className="flex items-center gap-8 px-3 py-2 bg-surface-raised border-b border-border-default">
+            <h1 className="text-text-primary text-lg font-semibold m-0">
+              Streamwall ({location.host})
+            </h1>
+            <div className="text-text-muted">
+              connection status:{' '}
+              {isConnected ? 'connected' : 'connecting...'}
+            </div>
+            <div className="text-text-muted">role: {role}</div>
+          </header>
+        )}
         {delayState && (
           <StreamDelayBox
             role={role}
@@ -735,14 +697,21 @@ export function ControlUI({
             setStreamRunning={setStreamRunning}
           />
         )}
-        <StyledDataContainer isConnected={isConnected}>
+        <div
+          className={`px-3 py-2 ${isConnected ? 'opacity-100' : 'opacity-50'}`}
+        >
           {gridCount && (
-            <StyledGridContainer
+            <div
+              className="relative border-2 border-border-default rounded-lg bg-[#0e0e0e] overflow-hidden group w-full"
+              style={{
+                maxWidth: windowWidth * 0.75,
+                maxHeight: windowHeight * 0.75,
+                aspectRatio: `${windowWidth} / ${windowHeight}`,
+              }}
               onMouseMove={updateHoveringIdx}
-              windowWidth={windowWidth}
-              windowHeight={windowHeight}
             >
-              <StyledGridInputs>
+              {/* Grid input layer */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-35 transition-opacity duration-100 overflow-hidden z-[100]">
                 {range(0, gridCount).map((y) =>
                   range(0, gridCount).map((x) => {
                     const idx = gridCount * y + x
@@ -771,8 +740,9 @@ export function ControlUI({
                     )
                   }),
                 )}
-              </StyledGridInputs>
-              <StyledGridPreview>
+              </div>
+              {/* Grid preview layer */}
+              <div className="absolute inset-0">
                 {views.map(({ state, isListening }) => {
                   const { pos } = state.context
                   if (pos == null) {
@@ -786,7 +756,7 @@ export function ControlUI({
                   }
 
                   return (
-                    <StyledGridPreviewBox
+                    <GridPreviewBox
                       color={idColor(streamId)}
                       style={{
                         left: `${(100 * pos.x) / windowWidth}%`,
@@ -800,16 +770,24 @@ export function ControlUI({
                       isListening={isListening}
                       isError={matchesState('displaying.error', state.state)}
                     >
-                      <StyledGridInfo>
-                        <StyledGridLabel>{streamId}</StyledGridLabel>
+                      <div className="text-center text-text-muted">
+                        <div className="text-[30px] text-text-primary font-medium">
+                          {streamId}
+                        </div>
                         <div>{data?.source}</div>
-                      </StyledGridInfo>
-                    </StyledGridPreviewBox>
+                      </div>
+                    </GridPreviewBox>
                   )
                 })}
-              </StyledGridPreview>
+              </div>
+              {/* Grid controls layer */}
               {views.map(
-                ({ state, isListening, isBackgroundListening, isBlurred }) => {
+                ({
+                  state,
+                  isListening,
+                  isBackgroundListening,
+                  isBlurred,
+                }) => {
                   const { pos } = state.context
                   if (!pos) {
                     return null
@@ -851,108 +829,61 @@ export function ControlUI({
                   )
                 },
               )}
-            </StyledGridContainer>
+            </div>
           )}
           {(roleCan(role, 'dev-tools') || roleCan(role, 'browse')) && (
-            <label>
+            <label className="flex items-center gap-2 mt-2 text-text-muted cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={showDebug}
                 onChange={handleChangeShowDebug}
+                className="accent-accent-blue"
               />
               Show stream debug tools
             </label>
           )}
-          <Facts />
-        </StyledDataContainer>
-      </Stack>
-      <Stack flex="1" scroll={true} minHeight={200}>
-        <StyledDataContainer isConnected={isConnected}>
-          {isConnected ? (
-            <div>
-              <h3>Live</h3>
-              <StreamList rows={liveStreams} />
-              <h3>Offline / Unknown</h3>
-              <StreamList rows={otherStreams} />
-            </div>
-          ) : (
-            <div>loading...</div>
-          )}
-          {roleCan(role, 'update-custom-stream') &&
-            roleCan(role, 'delete-custom-stream') && (
-              <>
-                <h2>Custom Streams</h2>
-                <div>
-                  {/*
-                    Include an empty object at the end to create an extra input for a new custom stream.
-                    We need it to be part of the array (rather than JSX below) for DOM diffing to match the key and retain focus.
-                  */}
-                  {customStreams.map(({ link, label, kind }, idx) => (
-                    <CustomStreamInput
-                      key={idx}
-                      link={link}
-                      label={label}
-                      kind={kind}
-                      onChange={handleChangeCustomStream}
-                      onDelete={handleDeleteCustomStream}
-                    />
-                  ))}
-                  <CreateCustomStreamInput
-                    onCreate={handleChangeCustomStream}
+        </div>
+      </div>
+      <div
+        className={`flex flex-col flex-1 overflow-y-auto min-h-0 px-3 py-2 ${isConnected ? 'opacity-100' : 'opacity-50'}`}
+      >
+        {isConnected ? (
+          <div>
+            <h3 className="text-text-primary font-semibold mt-4 mb-2">Live</h3>
+            <StreamList rows={liveStreams} />
+            <h3 className="text-text-primary font-semibold mt-4 mb-2">
+              Offline / Unknown
+            </h3>
+            <StreamList rows={otherStreams} />
+          </div>
+        ) : (
+          <div className="text-text-muted">loading...</div>
+        )}
+        {roleCan(role, 'update-custom-stream') &&
+          roleCan(role, 'delete-custom-stream') && (
+            <>
+              <h2 className="text-text-primary font-semibold text-lg mt-6 mb-3">
+                Custom Streams
+              </h2>
+              <div className="space-y-3">
+                {customStreams.map(({ link, label, kind }, idx) => (
+                  <CustomStreamInput
+                    key={idx}
+                    link={link}
+                    label={label}
+                    kind={kind}
+                    onChange={handleChangeCustomStream}
+                    onDelete={handleDeleteCustomStream}
                   />
-                </div>
-              </>
-            )}
-          {/*roleCan(role, 'edit-tokens') && authState && (
-              <>
-                <h2>Access</h2>
-                <div>
-                  <CreateInviteInput onCreateInvite={handleCreateInvite} />
-                  <h3>Invites</h3>
-                  {newInvite && (
-                    <StyledNewInviteBox>
-                      Invite link created:{' '}
-                      <a
-                        href={`/invite/${newInvite.secret}`}
-                        onClick={preventLinkClick}
-                      >
-                        "{newInvite.name}"
-                      </a>
-                    </StyledNewInviteBox>
-                  )}
-                  {authState.invites.map(({ id, name, role }) => (
-                    <AuthTokenLine
-                      id={id}
-                      name={name}
-                      role={role}
-                      onDelete={handleDeleteToken}
-                    />
-                  ))}
-                  <h3>Sessions</h3>
-                  {authState.sessions.map(({ id, name, role }) => (
-                    <AuthTokenLine
-                      id={id}
-                      name={name}
-                      role={role}
-                      onDelete={handleDeleteToken}
-                    />
-                  ))}
-                </div>
-              </>
-            )*/}
-        </StyledDataContainer>
-      </Stack>
-    </Stack>
+                ))}
+                <CreateCustomStreamInput onCreate={handleChangeCustomStream} />
+              </div>
+            </>
+          )}
+      </div>
+    </div>
   )
 }
-
-const Stack = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: ${({ flex }) => flex};
-  ${({ scroll }) => scroll && `overflow-y: auto`};
-  ${({ minHeight }) => minHeight && `min-height: ${minHeight}px`};
-`
 
 function StreamDurationClock({ startTime }: { startTime: number }) {
   const [now, setNow] = useState(() => DateTime.now())
@@ -965,7 +896,9 @@ function StreamDurationClock({ startTime }: { startTime: number }) {
     }
   }, [startTime])
   return (
-    <span>{now.diff(DateTime.fromMillis(startTime)).toFormat('hh:mm:ss')}</span>
+    <span>
+      {now.diff(DateTime.fromMillis(startTime)).toFormat('hh:mm:ss')}
+    </span>
   )
 }
 
@@ -999,9 +932,9 @@ function StreamDelayBox({
     }
   }
   return (
-    <div>
-      <StyledStreamDelayBox>
-        <strong>Streamdelay</strong>
+    <div className="px-3 py-2">
+      <div className="inline-flex items-center gap-4 px-4 py-3 bg-danger-bg border border-danger-border rounded-lg text-danger-text">
+        <strong className="text-[#f8d0d0]">Streamdelay</strong>
         {!delayState.isConnected && <span>connecting...</span>}
         {!delayState.isStreamRunning && <span>stream stopped</span>}
         {delayState.isConnected && (
@@ -1011,23 +944,66 @@ function StreamDelayBox({
             )}
             <span>delay: {delayState.delaySeconds}s</span>
             {delayState.isStreamRunning && (
-              <StyledButton
+              <ActionButton
                 isActive={delayState.isCensored}
                 onClick={handleToggleStreamCensored}
                 tabIndex={1}
               >
                 {buttonText}
-              </StyledButton>
+              </ActionButton>
             )}
             {roleCan(role, 'set-stream-running') && (
-              <StyledButton onClick={handleToggleStreamRunning} tabIndex={1}>
+              <ActionButton onClick={handleToggleStreamRunning} tabIndex={1}>
                 {delayState.isStreamRunning ? 'End stream' : 'Start stream'}
-              </StyledButton>
+              </ActionButton>
             )}
           </>
         )}
-      </StyledStreamDelayBox>
+      </div>
     </div>
+  )
+}
+
+function ActionButton({
+  isActive,
+  activeColor = 'red',
+  className = '',
+  children,
+  ...props
+}: {
+  isActive?: boolean
+  activeColor?: string
+  children: preact.ComponentChildren
+} & JSX.HTMLAttributes<HTMLButtonElement>) {
+  const activeStyle = isActive
+    ? {
+        borderColor: Color(activeColor).hsl().string(),
+        background: Color(activeColor)
+          .desaturate(0.5)
+          .darken(0.4)
+          .hsl()
+          .string(),
+      }
+    : {}
+  return (
+    <button
+      className={`flex items-center border-2 border-border-active bg-surface-card rounded-[5px] text-text-muted cursor-pointer transition-[background,border-color] duration-150 hover:bg-surface-overlay hover:border-border-hover focus:outline-none focus:ring-2 focus:ring-accent-blue/40 [&_svg]:w-5 [&_svg]:h-5 ${className}`}
+      style={activeStyle}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+
+function SmallActionButton(
+  props: Parameters<typeof ActionButton>[0],
+) {
+  return (
+    <ActionButton
+      {...props}
+      className={`[&_svg]:!w-3.5 [&_svg]:!h-3.5 ${props.className ?? ''}`}
+    />
   )
 }
 
@@ -1046,29 +1022,36 @@ function StreamLine({
   const handleMouseDownId = useCallback(() => {
     onClickId(id)
   }, [onClickId, id])
+  const color = idColor(id)
   return (
-    <StyledStreamLine>
-      <StyledId
-        $disabled={disabled}
-        onMouseDown={disabled ? null : handleMouseDownId}
-        $color={idColor(id)}
+    <div className="flex items-center my-2 text-text-muted">
+      <div
+        className={`shrink-0 mr-2 px-2 py-1 rounded-[5px] w-[3em] text-center text-text-primary font-medium transition-colors duration-150 ${disabled ? 'cursor-default' : 'cursor-pointer hover:brightness-125'}`}
+        style={{
+          background: Color(color).lightness(35).saturationl(50).hsl().string(),
+        }}
+        onMouseDown={disabled ? undefined : handleMouseDownId}
       >
         {id}
-      </StyledId>
+      </div>
       <div>
         {label ? (
           label
         ) : (
           <>
-            <strong>{source}</strong>
-            <a href={link} target="_blank">
+            <strong className="text-text-secondary">{source}</strong>{' '}
+            <a
+              href={link}
+              target="_blank"
+              className="text-accent-blue hover:underline"
+            >
               {truncate(link, { length: 55 })}
             </a>{' '}
             {notes}
           </>
         )}
       </div>
-    </StyledStreamLine>
+    </div>
   )
 }
 
@@ -1165,12 +1148,17 @@ function GridInput({
     },
     [idx, onChangeSpace],
   )
+  const color = idColor(spaceValue)
   return (
-    <StyledGridInputContainer style={style}>
-      <StyledGridInput
+    <div className="absolute" style={style}>
+      <LazyChangeInput
+        className="w-full h-full outline outline-1 outline-border-default border-none p-0 rounded-none text-xl text-center text-text-secondary focus:outline-accent-blue focus:shadow-[inset_0_0_8px_rgba(96,165,250,0.3)] focus:z-[100]"
+        style={{
+          background: isHighlighted
+            ? Color(color).lightness(25).saturationl(30).hsl().string()
+            : Color(color).lightness(18).saturationl(25).hsl().string(),
+        }}
         value={spaceValue}
-        color={idColor(spaceValue)}
-        isHighlighted={isHighlighted}
         disabled={!roleCan(role, 'mutate-state-doc')}
         onFocus={handleFocus}
         onBlur={handleBlur}
@@ -1178,7 +1166,55 @@ function GridInput({
         onChange={handleChange}
         isEager
       />
-    </StyledGridInputContainer>
+    </div>
+  )
+}
+
+function GridPreviewBox({
+  color,
+  style,
+  pos,
+  windowWidth,
+  windowHeight,
+  isListening,
+  isError,
+  children,
+}: {
+  color: string
+  style: JSX.HTMLAttributes['style']
+  pos: { x: number; y: number; width: number; height: number }
+  windowWidth: number
+  windowHeight: number
+  isListening: boolean
+  isError: boolean
+  children: preact.ComponentChildren
+}) {
+  const borderWidth = 2
+  return (
+    <div
+      className="flex items-center justify-center absolute overflow-hidden select-none"
+      style={{
+        ...style,
+        background:
+          Color(color).lightness(30).saturationl(40).hsl().string() ||
+          '#222222',
+        borderStyle: 'solid',
+        borderColor: isError
+          ? Color('red').lightness(45).hsl().string()
+          : '#333333',
+        borderLeftWidth: pos.x === 0 ? 0 : borderWidth,
+        borderRightWidth:
+          pos.x + pos.width === windowWidth ? 0 : borderWidth,
+        borderTopWidth: pos.y === 0 ? 0 : borderWidth,
+        borderBottomWidth:
+          pos.y + pos.height === windowHeight ? 0 : borderWidth,
+        boxShadow: isListening ? '0 0 0 3px #ef4444 inset' : 'none',
+        boxSizing: 'border-box',
+        color: '#e0e0e0',
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -1227,7 +1263,6 @@ function GridControls({
   onMouseDown: JSX.MouseEventHandler<HTMLDivElement>
 }) {
   // TODO: Refactor callbacks to use streamID instead of idx.
-  // We should probably also switch the view-state-changing RPCs to use a view id instead of idx like they do currently.
   const handleListeningClick = useCallback<
     JSX.MouseEventHandler<HTMLButtonElement>
   >(
@@ -1265,59 +1300,63 @@ function GridControls({
     [idx, onDevTools],
   )
   return (
-    <StyledGridControlsContainer style={style} onMouseDown={onMouseDown}>
+    <div
+      className="absolute select-none [&>*]:z-[200]"
+      style={style}
+      onMouseDown={onMouseDown}
+    >
       {isDisplaying && (
-        <StyledGridButtons side="left">
+        <div className="flex absolute top-0 left-0 [&_button]:m-[5px] [&_button]:mr-0">
           {showDebug ? (
             <>
               {roleCan(role, 'browse') && (
-                <StyledSmallButton onClick={handleBrowseClick} tabIndex={1}>
+                <SmallActionButton onClick={handleBrowseClick} tabIndex={1}>
                   <FaRegWindowMaximize />
-                </StyledSmallButton>
+                </SmallActionButton>
               )}
               {roleCan(role, 'dev-tools') && (
-                <StyledSmallButton onClick={handleDevToolsClick} tabIndex={1}>
+                <SmallActionButton onClick={handleDevToolsClick} tabIndex={1}>
                   <FaRegLifeRing />
-                </StyledSmallButton>
+                </SmallActionButton>
               )}
             </>
           ) : (
             <>
               {roleCan(role, 'reload-view') && (
-                <StyledSmallButton onClick={handleReloadClick} tabIndex={1}>
+                <SmallActionButton onClick={handleReloadClick} tabIndex={1}>
                   <FaSyncAlt />
-                </StyledSmallButton>
+                </SmallActionButton>
               )}
               {roleCan(role, 'mutate-state-doc') && (
-                <StyledSmallButton
+                <SmallActionButton
                   isActive={isSwapping}
                   onClick={handleSwapClick}
                   tabIndex={1}
                 >
                   <FaExchangeAlt />
-                </StyledSmallButton>
+                </SmallActionButton>
               )}
               {roleCan(role, 'rotate-stream') && (
-                <StyledSmallButton onClick={handleRotateClick} tabIndex={1}>
+                <SmallActionButton onClick={handleRotateClick} tabIndex={1}>
                   <FaRedoAlt />
-                </StyledSmallButton>
+                </SmallActionButton>
               )}
             </>
           )}
-        </StyledGridButtons>
+        </div>
       )}
-      <StyledGridButtons side="right">
+      <div className="flex absolute bottom-0 right-0 [&_button]:m-[5px] [&_button]:ml-0">
         {roleCan(role, 'set-view-blurred') && (
-          <StyledButton
+          <ActionButton
             isActive={isBlurred}
             onClick={handleBlurClick}
             tabIndex={1}
           >
             <FaVideoSlash />
-          </StyledButton>
+          </ActionButton>
         )}
         {roleCan(role, 'set-listening-view') && (
-          <StyledButton
+          <ActionButton
             isActive={isListening || isBackgroundListening}
             activeColor={
               isListening ? 'red' : Color('red').desaturate(0.5).hsl().string()
@@ -1326,10 +1365,10 @@ function GridControls({
             tabIndex={1}
           >
             <FaVolumeUp />
-          </StyledButton>
+          </ActionButton>
         )}
-      </StyledGridButtons>
-    </StyledGridControlsContainer>
+      </div>
+    </div>
   )
 }
 
@@ -1353,14 +1392,29 @@ function CustomStreamInput({
   }, [onDelete, props.link])
 
   return (
-    <div>
+    <div className="flex flex-wrap items-center gap-2 p-2 bg-surface-overlay border border-border-default rounded-lg">
       <LazyChangeInput
+        className="flex-1 min-w-[120px] px-2 py-1.5 bg-surface-base border border-border-default rounded-md text-sm text-text-secondary placeholder:text-text-dimmed focus:outline-none focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/25"
         value={props.label}
         onChange={handleChangeLabel}
         placeholder="Label (optional)"
-      />{' '}
-      <a href={props.link}>{props.link}</a> <span>({props.kind})</span>{' '}
-      <button onClick={handleDeleteClick}>x</button>
+      />
+      <a
+        href={props.link}
+        target="_blank"
+        className="text-accent-blue hover:underline text-sm truncate max-w-[200px] min-w-0"
+      >
+        {props.link}
+      </a>
+      <span className="text-text-dimmed text-xs px-1.5 py-0.5 bg-surface-card rounded">
+        {props.kind}
+      </span>
+      <button
+        className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-surface-card border border-border-default text-text-muted hover:bg-danger/20 hover:border-danger hover:text-danger transition-colors duration-150"
+        onClick={handleDeleteClick}
+      >
+        x
+      </button>
     </div>
   )
 }
@@ -1384,13 +1438,18 @@ function CreateCustomStreamInput({
     [onCreate, link, kind, label],
   )
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-wrap items-center gap-2 p-2 bg-surface-overlay border border-border-default border-dashed rounded-lg"
+    >
       <input
+        className="min-w-[140px] max-w-[300px] flex-1 px-2 py-1.5 bg-surface-base border border-border-default rounded-md text-sm text-text-secondary placeholder:text-text-dimmed focus:outline-none focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/25"
         value={link}
         onChange={(ev) => setLink(ev.currentTarget.value)}
         placeholder="https://..."
       />
       <select
+        className="px-2 py-1.5 bg-surface-base border border-border-default rounded-md text-sm text-text-secondary focus:outline-none focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/25"
         onChange={(ev) => setKind(ev.currentTarget.value as ContentKind)}
         value={kind}
       >
@@ -1401,210 +1460,20 @@ function CreateCustomStreamInput({
         <option value="background">background</option>
       </select>
       <input
+        className="flex-1 min-w-[100px] max-w-[160px] px-2 py-1.5 bg-surface-base border border-border-default rounded-md text-sm text-text-secondary placeholder:text-text-dimmed focus:outline-none focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/25"
         value={label}
         onChange={(ev) => setLabel(ev.currentTarget.value)}
         placeholder="Label (optional)"
       />
-      <button type="submit">add stream</button>
+      <button
+        type="submit"
+        className="shrink-0 px-3 py-1.5 bg-accent-blue/20 border border-accent-blue/40 rounded-md text-sm text-accent-blue font-medium hover:bg-accent-blue/30 transition-colors duration-150"
+      >
+        Add stream
+      </button>
     </form>
   )
 }
-
-const StyledHeader = styled.header`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
-  h1 {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
-  * {
-    margin-right: 2rem;
-  }
-`
-
-const StyledStreamDelayBox = styled.div`
-  display: inline-flex;
-  margin: 5px 0;
-  padding: 10px;
-  background: #fdd;
-
-  & > * {
-    margin-right: 1em;
-  }
-`
-
-const StyledDataContainer = styled.div`
-  opacity: ${({ isConnected }) => (isConnected ? 1 : 0.5)};
-`
-
-const StyledButton = styled.button`
-  display: flex;
-  align-items: center;
-  border: 2px solid gray;
-  border-color: gray;
-  background: #ccc;
-  border-radius: 5px;
-
-  ${({ isActive, activeColor = 'red' }) =>
-    isActive &&
-    `
-      border-color: ${Color(activeColor).hsl().string()};
-      background: ${Color(activeColor).desaturate(0.5).lighten(0.5).hsl().string()};
-    `};
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 10px orange inset;
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`
-
-const StyledSmallButton = styled(StyledButton)`
-  svg {
-    width: 14px;
-    height: 14px;
-  }
-`
-
-const StyledGridPreview = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-`
-
-const StyledGridPreviewBox = styled.div.attrs(() => ({
-  borderWidth: 2,
-}))`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  background: ${({ color }) =>
-    Color(color).lightness(50).hsl().string() || '#333'};
-  border: 0 solid
-    ${({ isError }) =>
-      isError ? Color('red').hsl().string() : Color('black').hsl().string()};
-  border-left-width: ${({ pos, borderWidth }) =>
-    pos.x === 0 ? 0 : borderWidth}px;
-  border-right-width: ${({ pos, borderWidth, windowWidth }) =>
-    pos.x + pos.width === windowWidth ? 0 : borderWidth}px;
-  border-top-width: ${({ pos, borderWidth }) =>
-    pos.y === 0 ? 0 : borderWidth}px;
-  border-bottom-width: ${({ pos, borderWidth, windowHeight }) =>
-    pos.y + pos.height === windowHeight ? 0 : borderWidth}px;
-  box-shadow: ${({ isListening }) =>
-    isListening ? `0 0 0 4px red inset` : 'none'};
-  box-sizing: border-box;
-  overflow: hidden;
-  user-select: none;
-`
-
-const StyledGridInfo = styled.div`
-  text-align: center;
-`
-
-const StyledGridLabel = styled.div`
-  font-size: 30px;
-`
-
-const StyledGridInputs = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 100ms ease-out;
-  overflow: hidden;
-  z-index: 100;
-`
-
-const StyledGridInputContainer = styled.div`
-  position: absolute;
-`
-
-const StyledGridButtons = styled.div`
-  display: flex;
-  position: absolute;
-  ${({ side }) =>
-    side === 'left' ? 'top: 0; left: 0' : 'bottom: 0; right: 0'};
-
-  ${StyledButton} {
-    margin: 5px;
-    ${({ side }) => (side === 'left' ? 'margin-right: 0' : 'margin-left: 0')};
-  }
-`
-
-const StyledGridInput = styled(LazyChangeInput)`
-  width: 100%;
-  height: 100%;
-  outline: 1px solid black;
-  border: none;
-  padding: 0;
-  background: ${({ color, isHighlighted }) =>
-    isHighlighted
-      ? Color(color).lightness(90).hsl().string()
-      : Color(color).lightness(75).hsl().string()};
-  font-size: 20px;
-  text-align: center;
-
-  &:focus {
-    outline: 1px solid black;
-    box-shadow: 0 0 5px black inset;
-    z-index: 100;
-  }
-`
-
-const StyledGridControlsContainer = styled.div`
-  position: absolute;
-  user-select: none;
-
-  & > * {
-    z-index: 200;
-  }
-`
-
-const StyledGridContainer = styled.div.attrs(() => ({
-  scale: 0.75,
-}))`
-  position: relative;
-  width: ${({ windowWidth, scale }) => windowWidth * scale}px;
-  height: ${({ windowHeight, scale }) => windowHeight * scale}px;
-  border: 2px solid black;
-  background: black;
-
-  &:hover ${StyledGridInputs} {
-    opacity: 0.35;
-  }
-`
-
-const StyledId = styled.div`
-  flex-shrink: 0;
-  margin-right: 5px;
-  background: ${({ $color }) =>
-    Color($color).lightness(50).hsl().string() || '#333'};
-  color: white;
-  padding: 3px;
-  border-radius: 5px;
-  width: 3em;
-  text-align: center;
-  cursor: ${({ $disabled }) => ($disabled ? 'normal' : 'pointer')};
-`
-
-const StyledStreamLine = styled.div`
-  display: flex;
-  align-items: center;
-  margin: 0.5em 0;
-`
 
 function CreateInviteInput({
   onCreateInvite,
@@ -1638,27 +1507,31 @@ function CreateInviteInput({
   )
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <input
+          className="px-3 py-2 bg-surface-base border border-border-default rounded-md text-sm text-text-secondary"
           onChange={handleChangeName}
           placeholder="Name"
           value={inviteName}
         />
-        <select onChange={handleChangeRole} value={inviteRole}>
+        <select
+          className="px-3 py-2 bg-surface-base border border-border-default rounded-md text-sm text-text-secondary"
+          onChange={handleChangeRole}
+          value={inviteRole}
+        >
           <option value="operator">operator</option>
           <option value="monitor">monitor</option>
         </select>
-        <button type="submit">create invite</button>
+        <button
+          type="submit"
+          className="px-3 py-2 bg-surface-card border border-border-default rounded-md text-sm text-text-muted hover:bg-surface-overlay"
+        >
+          create invite
+        </button>
       </form>
     </div>
   )
 }
-
-const StyledNewInviteBox = styled.div`
-  display: inline-block;
-  padding: 10px;
-  background: #dfd;
-`
 
 function AuthTokenLine({
   id,
@@ -1675,78 +1548,14 @@ function AuthTokenLine({
     onDelete(id)
   }, [id])
   return (
-    <div>
-      <strong>{name}</strong>: {role}{' '}
-      <button onClick={handleDeleteClick}>revoke</button>
+    <div className="text-text-muted">
+      <strong className="text-text-secondary">{name}</strong>: {role}{' '}
+      <button
+        className="px-2 py-1 bg-surface-card border border-border-default rounded text-sm text-text-muted hover:bg-danger/20 hover:text-danger"
+        onClick={handleDeleteClick}
+      >
+        revoke
+      </button>
     </div>
   )
 }
-
-function Facts() {
-  return (
-    <StyledFacts>
-      <BLM>Black Lives Matter.</BLM>
-      <TRM>
-        Trans rights are <em>human rights.</em>
-      </TRM>
-      <TIN>Technology is not neutral.</TIN>
-    </StyledFacts>
-  )
-}
-
-const StyledFacts = styled.div`
-  display: flex;
-  margin: 4px 0;
-
-  & > * {
-    line-height: 26px;
-    margin-right: 0.5em;
-    padding: 0 6px;
-    flex-shrink: 0;
-  }
-`
-
-const BLM = styled.div`
-  background: black;
-  color: white;
-`
-
-const TRM = styled.div`
-  background: linear-gradient(
-    to bottom,
-    #55cdfc 12%,
-    #f7a8b8 12%,
-    #f7a8b8 88%,
-    #55cdfc 88%
-  );
-  color: white;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-`
-
-const TIN = styled.div`
-  background: gray;
-  font-family: monospace;
-`
-
-// TODO: reuse for server
-/*
-export function main() {
-  const script = document.getElementById('main-script')
-  const wsEndpoint =
-    typeof script?.dataset?.wsEndpoint === 'string'
-      ? script.dataset.wsEndpoint
-      : 'defaultWsEndpoint'
-  const role =
-    typeof script?.dataset?.role === 'string'
-      ? (script.dataset.role as StreamwallRole)
-      : null
-
-  render(
-    <>
-      <GlobalStyle />
-      <App wsEndpoint={wsEndpoint} role={role} />
-    </>,
-    document.body,
-  )
-}
-*/
